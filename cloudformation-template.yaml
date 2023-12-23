@@ -4,9 +4,10 @@ Parameters:
   FunctionName:
     Type: String
     Description: The name of the Lambda function
-  VPCID:
-    Type: AWS::EC2::VPC::Id
-    Description: The ID of your existing VPC
+  VpcName:
+    Type: String
+    Description: Name of the VPC
+
 Resources:
   MyLambdaFunction:
     Type: AWS::Lambda::Function
@@ -77,7 +78,7 @@ Resources:
     EnableDnsHostnames: true
     Tags:
       - Key: Name
-        Value: !Ref VPCID
+        Value: !Ref VpcName
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
