@@ -70,10 +70,11 @@ Resources:
       -
         Key: Environment 
         Value: Production
+  
   MyVPC:
   Type: AWS::EC2::VPC
   Properties:
-    CidrBlock: 10.0.0.0/16
+    CidrBlock: "10.0.0.0/16"
     EnableDnsSupport: true
     EnableDnsHostnames: true
     Tags:
@@ -83,36 +84,36 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.1.0/24
+      CidrBlock: "10.0.1.0/24"
       MapPublicIpOnLaunch: true
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.2.0/24
+      CidrBlock: "10.0.2.0/24"
       MapPublicIpOnLaunch: true
   PublicSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.3.0/24
+      CidrBlock: "10.0.3.0/24"
       MapPublicIpOnLaunch: true
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.4.0/24
+      CidrBlock: "10.0.4.0/24"
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.5.0/24
+      CidrBlock: "10.0.5.0/24"
   PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.6.0/24
+      CidrBlock: "10.0.6.0/24"
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -128,3 +129,4 @@ Resources:
     EventSourceArn: !GetAtt MyKinesisStream.Arn
     FunctionName: !GetAtt MyLambdaFunction.Arn
     StartingPosition: TRIM_HORIZON
+
