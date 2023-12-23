@@ -27,7 +27,9 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
-          - !Ref PrivateSubnet3
+      DependsOn:
+        - LambdaExecutionRole
+        - PubPrivateVPC
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -189,14 +191,22 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Lambda function
-      VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+      VpcId: !Ref PubPrivateVPC
+
+  LambdaSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref LambdaSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
+
 
   MyLambdaTrigger:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-    EventSourceArn: !GetAtt MyKinesisStream.Arn
-    FunctionName: !GetAtt MyLambdaFunction.Arn
-    StartingPosition: TRIM_HORIZON
+      EventSourceArn: !GetAtt MyKinesisStream.Arn
+      FunctionName: !GetAtt MyLambdaFunction.Arn
+      StartingPosition: TRIM_HORIZON
+    DependsOn:
+    - MyLambdaFunction
+    - MyKinesisStream
