@@ -1,3 +1,130 @@
-template-file-path: template-file.yaml
-parameters: {}
-tags: {}
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation for Lambda, Kinesis and VPC
+Parameters:
+  FunctionName:
+    Type: String
+    Description: The name of the Lambda function
+  VpcName:
+    Type: String
+    Description: Name of the VPC
+
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = function(event, context, callback) {
+            callback(null, "Hello from Lambda");
+          };
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
+          - !Ref PrivateSubnet3
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+        - PolicyName: LambdaKinesisFullAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:*
+                Resource: '*'
+  MyKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: "String"
+      RetentionPeriodHours: 1
+      StreamModeDetails:
+        StreamMode: "on-demand"
+      Tags: 
+      -
+        Key: Environment 
+        Value: Production
+  MyVPC:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: 10.0.0.0/16
+    EnableDnsSupport: true
+    EnableDnsHostnames: true
+    Tags:
+      - Key: Name
+        Value: !Ref VpcName
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.4.0/24
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.5.0/24
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.6.0/24
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda function
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+
+  MyLambdaTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+    EventSourceArn: !GetAtt MyKinesisStream.Arn
+    FunctionName: !GetAtt MyLambdaFunction.Arn
+    StartingPosition: TRIM_HORIZON
