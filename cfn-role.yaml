@@ -1,10 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: An AWS CloudFormation template that creates an IAM role for a stack.
+Description: Creates an IAM role for AWS CloudFormation to manage resources.
 Resources:
-  MyRole:
+  CloudFormationManagerRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: MyIAMRole
+      RoleName: CloudFormationManagerRole
+      Description: Role for AWS CloudFormation to manage resources.
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -16,10 +17,18 @@ Resources:
               - 'sts:AssumeRole'
       Path: '/'
       Policies:
-        - PolicyName: MyPolicy
+        - PolicyName: CloudFormationFullAccessPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action: '*'
                 Resource: '*'
+Outputs:
+  CloudFormationManagerRoleARN:
+    Description: ARN of the IAM role created for CloudFormation
+    Value: !GetAtt CloudFormationManagerRole.Arn
+
+  CloudFormationManagerRoleName:
+    Description: Name of the IAM role created for CloudFormation
+    Value: !Ref CloudFormationManagerRole

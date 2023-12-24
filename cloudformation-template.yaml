@@ -20,16 +20,14 @@ Resources:
           exports.handler = function(event, context, callback) {
             callback(null, "Hello from Lambda");
           };
-      Runtime: nodejs12.x
+      Runtime: nodejs20.x
       VpcConfig:
         SecurityGroupIds:
           - !Ref LambdaSecurityGroup
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
-      DependsOn:
-        - LambdaExecutionRole
-        - PubPrivateVPC
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -61,16 +59,28 @@ Resources:
                 Action:
                   - kinesis:*
                 Resource: '*'
+        - PolicyName: LambdaVPCAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - ec2:DescribeNetworkInterfaces
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeInstances
+              - ec2:AttachNetworkInterface
+              Resource: "*"
+##kinesis
   MyKinesisStream:
     Type: AWS::Kinesis::Stream
     Properties:
-      Name: "String"
-      RetentionPeriodHours: 1
+      Name: "my-data-stream"
+      RetentionPeriodHours: 168
       StreamModeDetails:
-        StreamMode: "on-demand"
+        StreamMode: "ON_DEMAND"
       Tags: 
-      -
-        Key: Environment 
+      - Key: Environment 
         Value: Production
 ##VPC
   PubPrivateVPC:
@@ -83,7 +93,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref PubPrivateVPC
-      AvailabilityZone: us-east-2a
+      AvailabilityZone: us-east-1a
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
   
@@ -91,7 +101,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref PubPrivateVPC
-      AvailabilityZone: us-east-2b
+      AvailabilityZone: us-east-1b
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: true
   
@@ -99,7 +109,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref PubPrivateVPC
-      AvailabilityZone: us-east-2a
+      AvailabilityZone: us-east-1a
       CidrBlock: 10.0.3.0/24
       MapPublicIpOnLaunch: false
   
@@ -107,7 +117,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref PubPrivateVPC
-      AvailabilityZone: us-east-2b
+      AvailabilityZone: us-east-1b
       CidrBlock: 10.0.4.0/24
       MapPublicIpOnLaunch: false
   
@@ -207,6 +217,3 @@ Resources:
       EventSourceArn: !GetAtt MyKinesisStream.Arn
       FunctionName: !GetAtt MyLambdaFunction.Arn
       StartingPosition: TRIM_HORIZON
-    DependsOn:
-    - MyLambdaFunction
-    - MyKinesisStream
